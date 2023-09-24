@@ -23,7 +23,7 @@ type TxtaiNode = ChartNode<"txtai", TxtaiNodeData>;
 type TxtaiNodeData = {
   operation: string;
   parameters: any[];
-  llmQuery?: string;  // Added for LLM
+  llmQuery: string;  // Added for LLM
   useOperationInput?: boolean;
   useParametersInput?: boolean;
 };
@@ -157,14 +157,18 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         "llmQuery",
         "string"
       );
-
+      
+      let output: any;
+      
       if (llmQuery) {
         // Process the LLM query here
-      }
-
-      let output: any;
-
-      if (txtai[operation] && Array.isArray(parameters)) {
+        // This example uses the Txtai "search" operation as a placeholder for the LLM query.
+        if (txtai['search']) {
+          output = await txtai['search'](llmQuery, ...parameters);  // Replace this with the actual LLM query processing
+        } else {
+          output = "Invalid LLM query operation";
+        }
+      } else if (txtai[operation] && Array.isArray(parameters)) {
         output = await txtai[operation](...parameters);
       } else {
         output = "Invalid operation";
@@ -178,6 +182,10 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
       };
     },
   };
+
+  return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
+}
+
 
   return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
 }
