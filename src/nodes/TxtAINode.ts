@@ -185,7 +185,3 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
 
   return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
 }
-
-
-  return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
-}
