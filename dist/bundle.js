@@ -498,6 +498,13 @@ function txtaiPluginNode(rivet) {
           title: "Parameters"
         });
       }
+      if (data.llmQuery) {
+        inputs.push({
+          id: "llmQuery",
+          dataType: "string",
+          title: "LLM Query"
+        });
+      }
       return inputs;
     },
     getOutputDefinitions() {
@@ -524,23 +531,19 @@ function txtaiPluginNode(rivet) {
           dataKey: "operation",
           label: "Operation",
           options: [
-            { value: "textractor", label: "Text Extraction" },
-            { value: "extractor", label: "Extractor" },
-            { value: "transcription", label: "Transcription" },
-            { value: "summarization", label: "Text Summarization" },
-            { value: "sentiment", label: "Sentiment Analysis" },
-            { value: "translation", label: "Language Translation" },
-            { value: "classification", label: "Text Classification" },
-            { value: "embedding", label: "Text Embedding" },
-            { value: "search", label: "Text Search" },
-            { value: "tokenization", label: "Tokenization" },
-            { value: "namedEntity", label: "Named Entity Recognition" }
+            { value: "textractor", label: "Text Extraction" }
+            // ... (existing operations)
           ]
         },
         {
           type: "stringList",
           dataKey: "parameters",
           label: "Parameters"
+        },
+        {
+          type: "string",
+          dataKey: "llmQuery",
+          label: "LLM Query"
         }
       ];
     },
@@ -564,6 +567,14 @@ function txtaiPluginNode(rivet) {
         "parameters",
         "any"
       );
+      const llmQuery = rivet.getInputOrData(
+        data,
+        inputData,
+        "llmQuery",
+        "string"
+      );
+      if (llmQuery) {
+      }
       let output;
       if (txtai_exports[operation] && Array.isArray(parameters)) {
         output = await txtai_exports[operation](...parameters);
