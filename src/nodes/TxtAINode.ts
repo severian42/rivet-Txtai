@@ -23,10 +23,15 @@ type TxtaiNode = ChartNode<"txtai", TxtaiNodeData>;
 type TxtaiNodeData = {
   operation: string;
   parameters: any[];
-  llmQuery: string;  // Added for LLM
   useOperationInput?: boolean;
   useParametersInput?: boolean;
 };
+
+// Your extended Inputs type
+interface ExtendedInputs extends Inputs {
+  operation?: { value: string };
+  parameters?: { value: any[] };
+}
 
 export function txtaiPluginNode(rivet: typeof Rivet) {
   const TxtaiNodeImpl: PluginNodeImpl<TxtaiNode> = {
@@ -46,42 +51,27 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         },
       };
     },
-
+  
     getInputDefinitions(
       data: TxtaiNodeData,
       _connections: NodeConnection[],
       _nodes: Record<NodeId, ChartNode>,
       _project: Project
     ): NodeInputDefinition[] {
-      const inputs: NodeInputDefinition[] = [];
-
-      if (data.useOperationInput) {
-        inputs.push({
+      return [
+        {
           id: "operation" as PortId,
           dataType: "string",
           title: "Operation",
-        });
-      }
-
-      if (data.useParametersInput) {
-        inputs.push({
+        },
+        {
           id: "parameters" as PortId,
           dataType: "any",
-          title: "Parameters",
-        });
-      }
-
-      if (data.llmQuery) {
-        inputs.push({
-          id: "llmQuery" as PortId,
-          dataType: "string",
-          title: "LLM Query",
-        });
-      }
-
-      return inputs;
+          title: "Data",
+        },
+      ];
     },
-
+  
     getOutputDefinitions(): NodeOutputDefinition[] {
       return [
         {
@@ -100,7 +90,7 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         infoBoxTitle: "Txtai Node",
       };
     },
-
+  
     getEditors(): EditorDefinition<TxtaiNode>[] {
       return [
         {
@@ -109,79 +99,57 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
           label: "Operation",
           options: [
             { value: "textractor", label: "Text Extraction" },
-            // ... (existing operations)
+            { value: "transcription", label: "Transcription" },
+            { value: "summarization", label: "Text Summarization" },
+            { value: "sentiment", label: "Sentiment Analysis" },
+            { value: "translation", label: "Language Translation" },
+            { value: "classification", label: "Text Classification" },
+            { value: "embedding", label: "Text Embedding" },
+            { value: "search", label: "Text Search" },
+            { value: "tokenization", label: "Tokenization" },
+            { value: "namedEntity", label: "Named Entity Recognition" },
           ],
         },
         {
           type: "stringList",
           dataKey: "parameters",
-          label: "Parameters",
-        },
-        {
-          type: "string",
-          dataKey: "llmQuery",
-          label: "LLM Query",
+          label: "Data",
         },
       ];
     },
 
     getBody(data: TxtaiNodeData): string {
-      return rivet.dedent`
-        Txtai Node
-        Operation: ${data.useOperationInput ? "(Using Input)" : data.operation}
-        Parameters: ${data.useParametersInput ? "(Using Input)" : JSON.stringify(data.parameters)}
-      `;
+      return `Txtai Node\nOperation: ${data.operation}\nParameters: ${JSON.stringify(data.parameters)}`;
     },
-
+  
     async process(
       data: TxtaiNodeData,
       inputData: Inputs,
       _context: InternalProcessContext
     ): Promise<Outputs> {
-      const operation = rivet.getInputOrData(
-        data,
-        inputData,
-        "operation",
-        "string"
-      );
-      const parameters = rivet.getInputOrData(
-        data,
-        inputData,
-        "parameters",
-        "any"
-      ) as any[];
+      // Using optional chaining and type assertion
+      const operation = (inputData as ExtendedInputs)["operation"]?.value || data.operation;
+      const parameters = (inputData as ExtendedInputs)["parameters"]?.value || data.parameters;
 
-      const llmQuery = rivet.getInputOrData(
-        data,
-        inputData,
-        "llmQuery",
-        "string"
-      );
-      
+    
       let output: any;
-      
-      if (llmQuery) {
-        // Process the LLM query here
-        // This example uses the Txtai "search" operation as a placeholder for the LLM query.
-        if (txtai['search']) {
-          output = await txtai['search'](llmQuery, ...parameters);  // Replace this with the actual LLM query processing
-        } else {
-          output = "Invalid LLM query operation";
-        }
-      } else if (txtai[operation] && Array.isArray(parameters)) {
+    
+      if (txtai[operation] && Array.isArray(parameters)) {
         output = await txtai[operation](...parameters);
       } else {
-        output = "Invalid operation";
+        output = "Invalid operation or parameters";
       }
-
-      return {
-        ["outputData" as PortId]: {
-          type: "any",
-          value: output,
-        },
-      };
-    },
-  };
-
-  return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
-}
+    
+            // Make sure the output is in the format that Rivet expects
+            return {
+              ["outputData" as PortId]: {
+                type: "any",
+                value: output,
+              },
+            } as Outputs; // Explicit type assertion
+          },
+        };
+      
+        return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
+      }
+      

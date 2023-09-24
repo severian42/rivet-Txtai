@@ -483,29 +483,18 @@ function txtaiPluginNode(rivet) {
       };
     },
     getInputDefinitions(data, _connections, _nodes, _project) {
-      const inputs = [];
-      if (data.useOperationInput) {
-        inputs.push({
+      return [
+        {
           id: "operation",
           dataType: "string",
           title: "Operation"
-        });
-      }
-      if (data.useParametersInput) {
-        inputs.push({
+        },
+        {
           id: "parameters",
           dataType: "any",
-          title: "Parameters"
-        });
-      }
-      if (data.llmQuery) {
-        inputs.push({
-          id: "llmQuery",
-          dataType: "string",
-          title: "LLM Query"
-        });
-      }
-      return inputs;
+          title: "Data"
+        }
+      ];
     },
     getOutputDefinitions() {
       return [
@@ -531,55 +520,38 @@ function txtaiPluginNode(rivet) {
           dataKey: "operation",
           label: "Operation",
           options: [
-            { value: "textractor", label: "Text Extraction" }
-            // ... (existing operations)
+            { value: "textractor", label: "Text Extraction" },
+            { value: "transcription", label: "Transcription" },
+            { value: "summarization", label: "Text Summarization" },
+            { value: "sentiment", label: "Sentiment Analysis" },
+            { value: "translation", label: "Language Translation" },
+            { value: "classification", label: "Text Classification" },
+            { value: "embedding", label: "Text Embedding" },
+            { value: "search", label: "Text Search" },
+            { value: "tokenization", label: "Tokenization" },
+            { value: "namedEntity", label: "Named Entity Recognition" }
           ]
         },
         {
           type: "stringList",
           dataKey: "parameters",
-          label: "Parameters"
-        },
-        {
-          type: "string",
-          dataKey: "llmQuery",
-          label: "LLM Query"
+          label: "Data"
         }
       ];
     },
     getBody(data) {
-      return rivet.dedent`
-        Txtai Node
-        Operation: ${data.useOperationInput ? "(Using Input)" : data.operation}
-        Parameters: ${data.useParametersInput ? "(Using Input)" : JSON.stringify(data.parameters)}
-      `;
+      return `Txtai Node
+Operation: ${data.operation}
+Parameters: ${JSON.stringify(data.parameters)}`;
     },
     async process(data, inputData, _context) {
-      const operation = rivet.getInputOrData(
-        data,
-        inputData,
-        "operation",
-        "string"
-      );
-      const parameters = rivet.getInputOrData(
-        data,
-        inputData,
-        "parameters",
-        "any"
-      );
-      const llmQuery = rivet.getInputOrData(
-        data,
-        inputData,
-        "llmQuery",
-        "string"
-      );
-      if (llmQuery) {
-      }
+      const operation = inputData["operation"]?.value || data.operation;
+      const parameters = inputData["parameters"]?.value || data.parameters;
       let output;
       if (txtai_exports[operation] && Array.isArray(parameters)) {
         output = await txtai_exports[operation](...parameters);
       } else {
-        output = "Invalid operation";
+        output = "Invalid operation or parameters";
       }
       return {
         ["outputData"]: {
