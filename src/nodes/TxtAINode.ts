@@ -1,3 +1,4 @@
+// Import Rivet types
 import type {
   ChartNode,
   EditorDefinition,
@@ -15,9 +16,33 @@ import type {
   NodeConnection,
 } from "@ironclad/rivet-core";
 
-// @ts-ignore
-import * as txtai from "../../txtai/index.js";
+// Import Txtai classes with any type to bypass TypeScript checking
+const embeddings: any = require("../../txtai/embeddings.js");
+const extractor: any = require("../../txtai/extractor.js");
+const labels: any = require("../../txtai/labels.js");
+const segmentation: any = require("../../txtai/segmentation.js");
+const similarity: any = require("../../txtai/similarity.js");
+const summary: any = require("../../txtai/summary.js");
+const textractor: any = require("../../txtai/textractor.js");
+const transcription: any = require("../../txtai/transcription.js");
+const translation: any = require("../../txtai/translation.js");
+const workflow: any = require("../../txtai/workflow.js");
 
+// Map operations to Txtai modules
+const txtaiModules: { [key: string]: any } = {
+  embeddings,
+  extractor,
+  labels,
+  segmentation,
+  similarity,
+  summary,
+  textractor,
+  transcription,
+  translation,
+  workflow
+};
+
+// TxtaiNode and TxtaiNodeData types
 type TxtaiNode = ChartNode<"txtai", TxtaiNodeData>;
 
 type TxtaiNodeData = {
@@ -27,12 +52,13 @@ type TxtaiNodeData = {
   useParametersInput?: boolean;
 };
 
-// Your extended Inputs type
+// Extended Inputs type
 interface ExtendedInputs extends Inputs {
   operation?: { value: string };
   parameters?: { value: any[] };
 }
 
+// Txtai Plugin Node Definition
 export function txtaiPluginNode(rivet: typeof Rivet) {
   const TxtaiNodeImpl: PluginNodeImpl<TxtaiNode> = {
     create(): TxtaiNode {
@@ -51,13 +77,9 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         },
       };
     },
-  
-    getInputDefinitions(
-      data: TxtaiNodeData,
-      _connections: NodeConnection[],
-      _nodes: Record<NodeId, ChartNode>,
-      _project: Project
-    ): NodeInputDefinition[] {
+
+    // Define input and output ports
+    getInputDefinitions(): NodeInputDefinition[] {
       return [
         {
           id: "operation" as PortId,
@@ -67,11 +89,11 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         {
           id: "parameters" as PortId,
           dataType: "any",
-          title: "Data",
+          title: "Parameters",
         },
       ];
     },
-  
+    
     getOutputDefinitions(): NodeOutputDefinition[] {
       return [
         {
@@ -79,18 +101,24 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
           dataType: "any",
           title: "Output Data",
         },
+        {
+          id: "debugOutput" as PortId,  // Debug port
+          dataType: "string",
+          title: "Debug Output",
+        },
       ];
     },
 
+    // Define UI elements
     getUIData(): NodeUIData {
       return {
-        contextMenuTitle: "Txtai",
+        contextMenuTitle: "Txtai Node",
         group: "AI",
-        infoBoxBody: "Txtai Node",
+        infoBoxBody: "Perform various NLP tasks.",
         infoBoxTitle: "Txtai Node",
       };
     },
-  
+
     getEditors(): EditorDefinition<TxtaiNode>[] {
       return [
         {
@@ -125,30 +153,50 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
   
     async process(
       data: TxtaiNodeData,
-      inputData: Inputs,
+      inputData: ExtendedInputs,
       _context: InternalProcessContext
     ): Promise<Outputs> {
-      // Using optional chaining and type assertion
-      const operation = (inputData as ExtendedInputs)["operation"]?.value || data.operation;
-      const parameters = (inputData as ExtendedInputs)["parameters"]?.value || data.parameters;
+      // Additional Debugging Checks
+      console.log(`Input Data: ${JSON.stringify(inputData)}`);
 
-    
+      const operation = inputData.operation?.value || data.operation;
+      const parameters = inputData.parameters?.value || data.parameters;
+
+      console.log(`Operation: ${operation}`);
+      console.log(`Parameters: ${JSON.stringify(parameters)}`);
+
       let output: any;
-    
-      if (txtai[operation] && Array.isArray(parameters)) {
-        output = await txtai[operation](...parameters);
+
+      const module = txtaiModules[operation];
+      
+      console.log(`Module: ${JSON.stringify(module)}`);
+      console.log(`Module Operation Function Type: ${typeof module?.[operation]}`);
+
+      if (module && Array.isArray(parameters)) {
+        if (typeof module[operation] === 'function') {
+          output = await module[operation](...parameters);
+        } else {
+          output = "Invalid operation in module";
+        }
       } else {
         output = "Invalid operation or parameters";
       }
 
+      console.log(`Output: ${JSON.stringify(output)}`);
+
+      const debugInfo = `Operation: ${operation}, Parameters: ${JSON.stringify(parameters)}`;
+  
       return {
-        ["outputData" as PortId]: {
-          type: "any",
+        outputData: {
+          type: 'any',
           value: output,
         },
-      };
+        debugOutput: {  // Debug output
+          type: 'string',
+          value: debugInfo,
+        },
+      } as Outputs;
     },
   };
-
-  return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
+    return rivet.pluginNodeDefinition(TxtaiNodeImpl, "Txtai Node");
 }

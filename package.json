@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@ironclad/rivet-core": "^1.4.0",
-    "execa": "^8.0.1"
+    "execa": "^8.0.1",
+    "txtai": ">=6.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.0.0",
