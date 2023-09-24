@@ -14,6 +14,7 @@ import type {
   NodeUIData,
   NodeConnection,
 } from "@ironclad/rivet-core";
+
 // @ts-ignore
 import * as txtai from "../../txtai/index.js";
 
