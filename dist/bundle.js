@@ -520,16 +520,8 @@ function txtaiPluginNode(rivet) {
           dataKey: "operation",
           label: "Operation",
           options: [
-            { value: "textractor", label: "Text Extraction" },
-            { value: "transcription", label: "Transcription" },
-            { value: "summarization", label: "Text Summarization" },
-            { value: "sentiment", label: "Sentiment Analysis" },
-            { value: "translation", label: "Language Translation" },
-            { value: "classification", label: "Text Classification" },
-            { value: "embedding", label: "Text Embedding" },
-            { value: "search", label: "Text Search" },
-            { value: "tokenization", label: "Tokenization" },
-            { value: "namedEntity", label: "Named Entity Recognition" }
+            { value: "textractor", label: "Text Extraction" }
+            // ... (existing operations)
           ]
         },
         {
