@@ -17,7 +17,6 @@ import type {
 // @ts-ignore
 import * as txtai from "../../txtai/index.js";
 
-// Define the TxtaiNode type and its data structure
 type TxtaiNode = ChartNode<"txtai", TxtaiNodeData>;
 
 type TxtaiNodeData = {
