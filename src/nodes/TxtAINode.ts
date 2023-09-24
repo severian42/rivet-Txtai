@@ -23,6 +23,7 @@ type TxtaiNode = ChartNode<"txtai", TxtaiNodeData>;
 type TxtaiNodeData = {
   operation: string;
   parameters: any[];
+  llmQuery?: string;  // Added for LLM
   useOperationInput?: boolean;
   useParametersInput?: boolean;
 };
@@ -70,6 +71,14 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         });
       }
 
+      if (data.llmQuery) {
+        inputs.push({
+          id: "llmQuery" as PortId,
+          dataType: "string",
+          title: "LLM Query",
+        });
+      }
+
       return inputs;
     },
 
@@ -100,22 +109,18 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
           label: "Operation",
           options: [
             { value: "textractor", label: "Text Extraction" },
-            { value: "extractor", label: "Extractor" },
-            { value: "transcription", label: "Transcription" },
-            { value: "summarization", label: "Text Summarization" },
-            { value: "sentiment", label: "Sentiment Analysis" },
-            { value: "translation", label: "Language Translation" },
-            { value: "classification", label: "Text Classification" },
-            { value: "embedding", label: "Text Embedding" },
-            { value: "search", label: "Text Search" },
-            { value: "tokenization", label: "Tokenization" },
-            { value: "namedEntity", label: "Named Entity Recognition" },
+            // ... (existing operations)
           ],
         },
         {
           type: "stringList",
           dataKey: "parameters",
           label: "Parameters",
+        },
+        {
+          type: "string",
+          dataKey: "llmQuery",
+          label: "LLM Query",
         },
       ];
     },
@@ -128,7 +133,11 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
       `;
     },
 
-    async process(data: TxtaiNodeData, inputData: Inputs, _context: InternalProcessContext): Promise<Outputs> {
+    async process(
+      data: TxtaiNodeData,
+      inputData: Inputs,
+      _context: InternalProcessContext
+    ): Promise<Outputs> {
       const operation = rivet.getInputOrData(
         data,
         inputData,
@@ -141,6 +150,17 @@ export function txtaiPluginNode(rivet: typeof Rivet) {
         "parameters",
         "any"
       ) as any[];
+
+      const llmQuery = rivet.getInputOrData(
+        data,
+        inputData,
+        "llmQuery",
+        "string"
+      );
+
+      if (llmQuery) {
+        // Process the LLM query here
+      }
 
       let output: any;
 
